@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stockwise AI - Intelligent Stock Forecasting</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-graph-up-arrow text-primary me-2 fs-4"></i>
+                <span>Stockwise</span>
+                <span class="badge-ai text-white">AI</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#historySection"><i class="bi bi-clock-history me-1"></i> History</a>
+                    </li>
+                </ul>
+
+                <!-- Auth Navigation Section -->
+                <div class="d-flex align-items-center">
+                    <div id="guest-menu" class="d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                        </button>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#registerModal">
+                            <i class="bi bi-person-plus me-1"></i> Get Started
+                        </button>
+                    </div>
+
+                    <div id="user-menu" class="d-none dropdown">
+                        <button class="btn btn-dark border border-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            <span id="user-display-name">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#historySection"><i class="bi bi-clock-history me-2"></i>My Predictions</a></li>
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li><a class="dropdown-item text-danger" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Top Market Overview Cards -->
+        <div class="row mb-3" id="stocksOverview">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Forecasting Studio Row -->
+        <div class="row g-4">
+            <!-- Left Controls Column -->
+            <div class="col-lg-4 col-xl-3">
+                <div class="card card-custom h-100">
+                    <div class="card-custom-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-sliders me-2 text-primary"></i>Model Controls</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">REST API</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="predictionForm">
+                            <!-- Stock Symbol -->
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">STOCK TICKER</label>
+                                <select class="form-select" id="stockSelect" required>
+                                    <option value="AAPL">AAPL - Apple Inc.</option>
+                                    <option value="MSFT">MSFT - Microsoft Corp.</option>
+                                    <option value="GOOGL">GOOGL - Alphabet Inc.</option>
+                                    <option value="NVDA">NVDA - NVIDIA Corp.</option>
+                                    <option value="TSLA">TSLA - Tesla Inc.</option>
+                                    <option value="BBCA.JK">BBCA.JK - Bank Central Asia</option>
+                                    <option value="BBRI.JK">BBRI.JK - Bank Rakyat Indonesia</option>
+                                    <option value="CUSTOM">+ Custom Ticker...</option>
+                                </select>
+                                <input type="text" class="form-control mt-2 d-none" id="customSymbolInput" placeholder="Enter Ticker (e.g. AMZN, TLKM.JK)">
+                            </div>
+
+                            <!-- Model Selection -->
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">AI / ML ALGORITHM</label>
+                                <select class="form-select" id="modelSelect" required>
+                                    <optgroup label="Machine Learning">
+                                        <option value="xgboost" selected>XGBoost Regressor</option>
+                                        <option value="random_forest">Scikit-Learn Random Forest</option>
+                                        <option value="linear_regression">Scikit-Learn Ridge Regression</option>
+                                    </optgroup>
+                                    <optgroup label="Deep Learning">
+                                        <option value="lstm">TensorFlow / Keras LSTM</option>
+                                    </optgroup>
+                                    <optgroup label="Statistical Modeling">
+                                        <option value="arima">Statsmodels ARIMA(2,1,1)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <!-- Forecast Horizon -->
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">FORECAST HORIZON</label>
+                                <select class="form-select" id="daysSelect">
+                                    <option value="3">3 Days Ahead</option>
+                                    <option value="7" selected>7 Days Ahead</option>
+                                    <option value="14">14 Days Ahead</option>
+                                    <option value="30">30 Days Ahead</option>
+                                </select>
+                            </div>
+
+                            <!-- Historical Period -->
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">TRAINING DATASET PERIOD</label>
+                                <select class="form-select" id="periodSelect">
+                                    <option value="6m">Last 6 Months</option>
+                                    <option value="1y" selected>Last 1 Year</option>
+                                    <option value="2y">Last 2 Years</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                                <i class="bi bi-cpu"></i> Run Forecast Model
+                            </button>
+                        </form>
+
+                        <div id="auth-warning" class="alert alert-warning mt-3 py-2 px-3 small border-0 bg-opacity-25 bg-warning text-warning">
+                            <i class="bi bi-info-circle me-1"></i> Running in guest mode. Sign in to automatically persist forecasts to database.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Visualizations Column -->
+            <div class="col-lg-8 col-xl-9">
+                <div class="card card-custom position-relative">
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="loading-overlay">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                        <h6 class="text-white fw-bold">Training Model & Generating Predictions...</h6>
+                        <small class="text-muted">Computing lag features, running inference, and calculating metrics</small>
+                    </div>
+
+                    <!-- Header with Title and Current Price -->
+                    <div class="card-custom-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <h5 class="mb-0 fw-bold" id="chartStockTitle">Stock Price Forecast</h5>
+                            <span id="chartModelBadge" class="badge badge-model badge-xgboost mt-1">XGBoost Regressor</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="fs-4 fw-bold" id="currentStockPrice">$0.00</div>
+                            <div id="currentStockChange" class="small text-muted">+0.00 (0.00%)</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Evaluation Metric Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6 col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-label">MAE (Mean Absolute Error)</div>
+                                    <div class="metric-value" id="metricMAE">--</div>
+                                    <div class="metric-sub">Average absolute error</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-label">RMSE (Root Mean Sq Error)</div>
+                                    <div class="metric-value text-info" id="metricRMSE">--</div>
+                                    <div class="metric-sub">Penalizes large variances</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-label">MAPE (%)</div>
+                                    <div class="metric-value text-warning" id="metricMAPE">--</div>
+                                    <div class="metric-sub">Mean percentage deviation</div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3">
+                                <div class="metric-card">
+                                    <div class="metric-label">R² Score</div>
+                                    <div class="metric-value text-success" id="metricR2">--</div>
+                                    <div class="metric-sub">Goodness of fit</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Interactive Chart Canvas -->
+                        <div class="chart-container mb-4">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+
+                        <!-- Secondary Row: Forecast Table & Feature Importance -->
+                        <div class="row g-4 mt-2">
+                            <div class="col-lg-6">
+                                <h6 class="fw-bold mb-3"><i class="bi bi-table me-2 text-primary"></i>Forecast Schedule & Bounds</h6>
+                                <div class="table-responsive" style="max-height: 250px;">
+                                    <table class="table table-custom table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Target Date</th>
+                                                <th>Predicted Price</th>
+                                                <th>90% Lower</th>
+                                                <th>90% Upper</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="forecastSummaryBody">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6" id="featureChartContainer">
+                                <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2 text-primary"></i>Model Insights & Weights</h6>
+                                <div style="height: 230px;">
+                                    <canvas id="featureChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="row mt-4" id="historySection">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-custom-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Forecast History (PostgreSQL / GORM)</span>
+                        <span class="badge bg-secondary">Auto-Migrated</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Algorithm</th>
+                                        <th>Base Price</th>
+                                        <th>MAE</th>
+                                        <th>R² Score</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">Please log in to view saved forecast records.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-box-arrow-in-right text-primary me-2"></i>Sign In to Stockwise AI</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="loginForm">
+                    <div class="modal-body">
+                        <div id="loginAlert" class="alert alert-danger py-2 small d-none"></div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Email Address</label>
+                            <input type="email" class="form-control" id="loginEmail" required placeholder="name@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4">Sign In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus text-primary me-2"></i>Create an Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="registerForm">
+                    <div class="modal-body">
+                        <div id="registerAlert" class="alert alert-danger py-2 small d-none"></div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Username</label>
+                            <input type="text" class="form-control" id="registerUsername" required minlength="3" placeholder="johndoe">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Email Address</label>
+                            <input type="email" class="form-control" id="registerEmail" required placeholder="name@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Password</label>
+                            <input type="password" class="form-control" id="registerPassword" required minlength="6" placeholder="Min. 6 characters">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4">Register</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;"></div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- App Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
